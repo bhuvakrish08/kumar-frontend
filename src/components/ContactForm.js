@@ -356,7 +356,7 @@ export default function ContactForm({ contact, sources = [] }) {
                     height: '72px',
                     borderRadius: '50%',
                     overflow: 'hidden',
-                    border: '3px solid #1e4d3a',
+                    border: '3px solid #1a73e8',
                     flexShrink: 0,
                     display: 'block',
                     cursor: 'pointer'
@@ -390,14 +390,14 @@ export default function ContactForm({ contact, sources = [] }) {
                 />
 
                 {uploading && (
-                  <div style={{ fontSize: '0.85rem', color: '#1e4d3a', marginTop: '0.4rem', fontWeight: 600 }}>
+                  <div style={{ fontSize: '0.85rem', color: '#1a73e8', marginTop: '0.4rem', fontWeight: 600 }}>
                     ⏳ Uploading image to backend uploads folder...
                   </div>
                 )}
 
                 {photoUrl ? (
                   <div style={{ marginTop: '0.6rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '0.8rem', color: '#1e4d3a', fontWeight: 700 }}>✅ Stored Database URL:</span>
+                    <span style={{ fontSize: '0.8rem', color: '#1a73e8', fontWeight: 700 }}>✅ Stored Database URL:</span>
                     <input
                       type="text"
                       readOnly
@@ -408,7 +408,7 @@ export default function ContactForm({ contact, sources = [] }) {
                       href={fullPhotoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ fontSize: '0.8rem', color: '#1e4d3a', fontWeight: 700, textDecoration: 'none' }}
+                      style={{ fontSize: '0.8rem', color: '#1a73e8', fontWeight: 700, textDecoration: 'none' }}
                     >
                       ↗ Open in new tab
                     </a>

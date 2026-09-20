@@ -183,7 +183,7 @@ export default function ChangeCredentialsModal({ isOpen, onClose }) {
                 borderRadius: '8px',
                 padding: '9px 20px',
                 fontWeight: 600,
-                backgroundColor: '#1e4d3a',
+                backgroundColor: '#1a73e8',
                 color: '#ffffff',
                 border: 'none',
                 cursor: 'pointer'

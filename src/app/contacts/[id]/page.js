@@ -100,7 +100,7 @@ export default function ContactDetailPage() {
                     <img
                       src={getImageUrl(c.photo_url)}
                       alt={name}
-                      style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '3px solid #1e4d3a', shadow: 'var(--shadow-md)' }}
+                      style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '3px solid #1a73e8', shadow: 'var(--shadow-md)' }}
                     />
                   </a>
                 ) : (

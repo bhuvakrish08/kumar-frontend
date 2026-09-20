@@ -6,10 +6,10 @@
   --muted: #6f6b63;
   --line: #dedad1;
   --line-strong: #cbd5e1;
-  --accent: #1e4d3a;
-  --accent-hover: #153729;
-  --accent-light: #f0f7f4;
-  --accent-subtle: #d8f3dc;
+  --accent: #1a73e8;
+  --accent-hover: #1557b0;
+  --accent-light: #e8f0fe;
+  --accent-subtle: #d2e3fc;
   --success: #166534;
   --success-bg: #f0fdf4;
   --danger: #9d2b2b;
@@ -98,7 +98,7 @@ button, input, textarea, select {
 .brand-icon {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #1e4d3a 0%, #2d6a4f 100%);
+  background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%);
   color: #ffffff;
   border-radius: var(--radius-md);
   display: flex;
@@ -107,7 +107,7 @@ button, input, textarea, select {
   font-family: var(--font-serif);
   font-weight: 700;
   font-size: 22px;
-  box-shadow: 0 4px 12px rgba(30, 77, 58, 0.35);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.35);
   flex-shrink: 0;
 }
 
@@ -201,15 +201,15 @@ button, input, textarea, select {
 }
 
 .btn.primary {
-  background: linear-gradient(135deg, #1e4d3a 0%, #2d6a4f 100%);
+  background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%);
   color: #ffffff;
   border-color: transparent;
-  box-shadow: 0 4px 14px rgba(30, 77, 58, 0.35);
+  box-shadow: 0 4px 14px rgba(26, 115, 232, 0.35);
 }
 
 .btn.primary:hover {
-  background: linear-gradient(135deg, #153729 0%, #1e4d3a 100%);
-  box-shadow: 0 6px 18px rgba(30, 77, 58, 0.45);
+  background: linear-gradient(135deg, #1557b0 0%, #1047a9 100%);
+  box-shadow: 0 6px 18px rgba(26, 115, 232, 0.45);
   color: #ffffff;
 }
 
@@ -280,7 +280,7 @@ button, input, textarea, select {
   right: -60px;
   width: 200px;
   height: 200px;
-  background: radial-gradient(circle, rgba(30, 77, 58, 0.08) 0%, rgba(255, 255, 255, 0) 70%);
+  background: radial-gradient(circle, rgba(26, 115, 232, 0.08) 0%, rgba(255, 255, 255, 0) 70%);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -316,7 +316,7 @@ button, input, textarea, select {
   font-family: var(--font-serif);
   font-size: 19px;
   line-height: 1.7;
-  color: #1e4d3a;
+  color: #1a73e8;
   margin: 0;
   font-style: italic;
 }
@@ -362,7 +362,7 @@ button, input, textarea, select {
 .tag:hover {
   background: var(--accent-subtle);
   color: var(--accent-hover);
-  border-color: #b7e4c7;
+  border-color: #aecbfa;
   transform: translateY(-1px);
 }
 
@@ -370,7 +370,7 @@ button, input, textarea, select {
   background: var(--accent);
   color: #ffffff;
   border-color: var(--accent);
-  box-shadow: 0 2px 8px rgba(30, 77, 58, 0.3);
+  box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
 }
 
 .section-title {
@@ -481,7 +481,7 @@ button, input, textarea, select {
 
 .field input:focus, .field textarea:focus, .field select:focus, .search input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(30, 77, 58, 0.18);
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.18);
 }
 
 .field textarea {
@@ -589,7 +589,7 @@ button, input, textarea, select {
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background: radial-gradient(circle at 50% 30%, #f0f7f4 0%, #f4f2ed 70%);
+  background: radial-gradient(circle at 50% 30%, #e8f0fe 0%, #f4f2ed 70%);
 }
 
 .login {

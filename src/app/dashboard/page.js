@@ -162,7 +162,7 @@ export default function DashboardPage() {
                   <div>{c.company_name || <span className="subtle">No company</span>}</div>
                   <div className="desktop-only" style={{ fontSize: '0.875rem' }}>
                     {c.source_names ? (
-                      <span style={{ background: '#f0f7f4', color: '#1e4d3a', border: '1px solid #d8f3dc', padding: '3px 8px', borderRadius: '6px', fontWeight: 600, fontSize: '0.8rem' }}>
+                      <span style={{ background: '#e8f0fe', color: '#1a73e8', border: '1px solid #d2e3fc', padding: '3px 8px', borderRadius: '6px', fontWeight: 600, fontSize: '0.8rem' }}>
                         {c.source_names}
                       </span>
                     ) : (
