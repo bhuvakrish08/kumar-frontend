@@ -84,7 +84,7 @@ export default function LoginPage() {
               marginBottom: '4px',
             }}
           >
-            Kumarda Contacts
+            Kumarda’s Dossier
           </h1>
 
           <p
@@ -93,7 +93,7 @@ export default function LoginPage() {
               fontSize: '0.9rem',
             }}
           >
-            Sign in to your relationship memory
+            Every person who matters. All in one place.
           </p>
         </div>
 
