@@ -16,9 +16,6 @@ export default function Header() {
     } catch (err) {
       console.warn('Logout warning:', err.message);
     } finally {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('kumarda_token');
-      }
       router.push('/');
       router.refresh();
     }
@@ -30,8 +27,8 @@ export default function Header() {
         <Link href="/dashboard" className="brand-wrap">
           <div className="brand-icon">K</div>
           <div>
-            <div className="brand">Kumarda’s Dossier</div>
-            <div className="subtle">Every person who matters. All in one place.</div>
+            <div className="brand">Kumarda Contacts</div>
+            <div className="subtle">Executive Relationship Memory</div>
           </div>
         </Link>
         <nav className="nav">

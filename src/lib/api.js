@@ -17,7 +17,7 @@ export async function apiFetch(endpoint, options = {}) {
   } else {
     const base = API_BASE_URL.replace(/\/+$/, '');
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    
+
     if (base.endsWith('/api/v1')) {
       url = `${base}${cleanEndpoint}`;
     } else if (cleanEndpoint.startsWith('/api/v1/')) {
@@ -32,13 +32,7 @@ export async function apiFetch(endpoint, options = {}) {
     ...(options.headers || {})
   };
 
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('kumarda_token');
-    if (token) {
-      defaultHeaders['Authorization'] = `Bearer ${token}`;
-    }
-  }
-
+  // Strictly use secure HttpOnly cookies (credentials: 'include') - no token in localStorage
   const response = await fetch(url, {
     ...options,
     headers: defaultHeaders,
@@ -51,7 +45,6 @@ export async function apiFetch(endpoint, options = {}) {
     window.location.pathname !== '/' &&
     window.location.pathname !== '/login'
   ) {
-    localStorage.removeItem('kumarda_token');
     window.location.href = '/';
     throw new Error('Unauthorized');
   }
@@ -80,18 +73,9 @@ export async function apiUploadFile(file) {
   const formData = new FormData();
   formData.append('file', file);
 
-  const headers = {};
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('kumarda_token');
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-  }
-
   const response = await fetch(url, {
     method: 'POST',
     body: formData,
-    headers,
     credentials: 'include'
   });
 

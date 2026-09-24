@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch, apiUploadFile, getImageUrl } from '@/lib/api';
 
@@ -14,6 +14,23 @@ export default function ContactForm({ contact, sources = [] }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [photoUrl, setPhotoUrl] = useState(contact?.photo_url || '');
+
+  // "How I Know This Person" state
+  const [userContacts, setUserContacts] = useState([]);
+  const [selectedIntroducerId, setSelectedIntroducerId] = useState(
+    contact?.introduced_by_contact_id ? String(contact.introduced_by_contact_id) : ''
+  );
+  const [introducedByName, setIntroducedByName] = useState(contact?.introduced_by_name || '');
+
+  useEffect(() => {
+    // Fetch user's contacts to allow linking introducer
+    apiFetch('/contacts')
+      .then(list => {
+        const filtered = (list || []).filter(c => !contact?.id || c.id !== contact.id);
+        setUserContacts(filtered);
+      })
+      .catch(() => {});
+  }, [contact?.id]);
 
   async function handleFileUpload(e) {
     const file = e.target.files?.[0];
@@ -211,49 +228,101 @@ export default function ContactForm({ contact, sources = [] }) {
         </div>
       </div>
 
-      {/* 4. Relationship Context & How We Met */}
+      {/* 4. How I Know This Person */}
       <div className="card">
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--line)' }}>
           <span style={{ fontSize: '1.25rem' }}>🤝</span>
           <div>
-            <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--ink)' }}>Relationship Context</h3>
-            <div className="subtle" style={{ fontSize: '0.8rem' }}>How, where, and when you first connected</div>
+            <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--ink)' }}>How I Know This Person</h3>
+            <div className="subtle" style={{ fontSize: '0.8rem' }}>Who introduced them, where, when, and context notes</div>
           </div>
         </div>
         <div className="form-grid">
+          {/* Link introducer from contacts */}
           <div className="field">
-            <label>Introduced By</label>
+            <label>Introduced By (Select From Your Contacts)</label>
+            <select
+              name="introduced_by_contact_id"
+              value={selectedIntroducerId}
+              onChange={(e) => {
+                const idVal = e.target.value;
+                setSelectedIntroducerId(idVal);
+                if (idVal) {
+                  const found = userContacts.find(c => String(c.id) === idVal);
+                  if (found) {
+                    const fullName = [found.first_name, found.last_name].filter(Boolean).join(' ');
+                    setIntroducedByName(fullName);
+                  }
+                }
+              }}
+            >
+              <option value="">-- External Person / None --</option>
+              {userContacts.map(c => {
+                const cName = [c.first_name, c.last_name].filter(Boolean).join(' ');
+                const label = c.company_name ? `${cName} (${c.company_name})` : cName;
+                return (
+                  <option key={c.id} value={c.id}>
+                    👤 {label}
+                  </option>
+                );
+              })}
+            </select>
+            <div className="subtle" style={{ fontSize: '0.75rem', marginTop: '4px' }}>
+              Choose an existing contact from your account to link them directly.
+            </div>
+          </div>
+
+          {/* Introducer Name (or custom if external) */}
+          <div className="field">
+            <label>Introducer Name</label>
             <input
               type="text"
               name="introduced_by_name"
-              defaultValue={contact?.introduced_by_name || ''}
+              value={introducedByName}
+              onChange={(e) => setIntroducedByName(e.target.value)}
               placeholder="e.g. Larry Rappaport"
             />
+            <div className="subtle" style={{ fontSize: '0.75rem', marginTop: '4px' }}>
+              Name of the person who made the introduction.
+            </div>
           </div>
+
           <div className="field">
-            <label>How / Occasion We Met</label>
+            <label>How / Where We Met (Context)</label>
             <input
               type="text"
               name="met_context"
               defaultValue={contact?.met_context || ''}
-              placeholder="e.g. Daughter's wedding"
+              placeholder="e.g. Daughter's wedding, Annual Logistics Summit"
             />
           </div>
+
           <div className="field">
-            <label>Where We Met</label>
+            <label>Place</label>
             <input
               type="text"
               name="met_place"
               defaultValue={contact?.met_place || ''}
-              placeholder="e.g. Mystique Banquet Hall"
+              placeholder="e.g. Mystique Banquet Hall, Chicago"
             />
           </div>
+
           <div className="field">
-            <label>When We Met</label>
+            <label>Date First Met</label>
             <input
               type="date"
               name="met_date"
               defaultValue={dateValue(contact?.met_date)}
+            />
+          </div>
+
+          <div className="field wide">
+            <label>How We Met Notes</label>
+            <textarea
+              name="how_we_met_notes"
+              defaultValue={contact?.how_we_met_notes || ''}
+              placeholder="Specific notes on how you got introduced, first conversation impressions, or initial meeting background."
+              rows={3}
             />
           </div>
         </div>

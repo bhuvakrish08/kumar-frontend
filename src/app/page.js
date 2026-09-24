@@ -31,12 +31,8 @@ export default function LoginPage() {
         }),
       });
 
-      if (!data || (!data.user && !data.token)) {
+      if (!data || !data.user) {
         throw new Error('Invalid login response from server.');
-      }
-
-      if (data.token && typeof window !== 'undefined') {
-        localStorage.setItem('kumarda_token', data.token);
       }
 
       router.push('/dashboard');
@@ -84,7 +80,7 @@ export default function LoginPage() {
               marginBottom: '4px',
             }}
           >
-            Kumarda’s Dossier
+            Kumarda Contacts
           </h1>
 
           <p
@@ -93,7 +89,7 @@ export default function LoginPage() {
               fontSize: '0.9rem',
             }}
           >
-            Every person who matters. All in one place.
+            Sign in to your relationship memory
           </p>
         </div>
 

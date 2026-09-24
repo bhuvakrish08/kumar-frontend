@@ -36,10 +36,6 @@ export default function ChangeCredentialsModal({ isOpen, onClose }) {
         })
       });
 
-      if (res.token) {
-        localStorage.setItem('kumarda_token', res.token);
-      }
-
       setSuccess('✅ Password updated successfully!');
       setNewPassword('');
       setConfirmPassword('');

@@ -15,7 +15,7 @@ export default function Navbar({ user, onLogout }) {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
         <Link href="/dashboard" style={{ textDecoration: 'none', color: '#0f172a', fontWeight: 700, fontSize: '1.25rem' }}>
-          Kumarda’s Dossier
+          Kumarda Contacts
         </Link>
       </div>
       {user && (
