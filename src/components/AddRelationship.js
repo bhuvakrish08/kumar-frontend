@@ -22,7 +22,7 @@ export default function AddRelationship({ contactId, onRelationshipAdded }) {
         const filtered = (list || []).filter(c => String(c.id) !== String(contactId));
         setUserContacts(filtered);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [contactId]);
 
   async function submit(e) {

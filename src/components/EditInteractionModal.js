@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
 
 function formatForDatetimeLocal(dateStr) {
@@ -24,14 +24,26 @@ function formatForDateInput(dateStr) {
 }
 
 export default function EditInteractionModal({ interaction, isOpen, onClose, onUpdated }) {
-  const [interactionType, setInteractionType] = useState(interaction?.interaction_type || 'Note');
-  const [occurredAt, setOccurredAt] = useState(formatForDatetimeLocal(interaction?.occurred_at));
-  const [subject, setSubject] = useState(interaction?.subject || '');
-  const [details, setDetails] = useState(interaction?.details || '');
-  const [followUpDate, setFollowUpDate] = useState(formatForDateInput(interaction?.follow_up_date));
-  const [followUpStatus, setFollowUpStatus] = useState(interaction?.follow_up_status || 'none');
+  const [interactionType, setInteractionType] = useState('Note');
+  const [occurredAt, setOccurredAt] = useState('');
+  const [subject, setSubject] = useState('');
+  const [details, setDetails] = useState('');
+  const [followUpDate, setFollowUpDate] = useState('');
+  const [followUpStatus, setFollowUpStatus] = useState('none');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (interaction) {
+      setInteractionType(interaction.interaction_type || 'Note');
+      setOccurredAt(formatForDatetimeLocal(interaction.occurred_at));
+      setSubject(interaction.subject || '');
+      setDetails(interaction.details || '');
+      setFollowUpDate(formatForDateInput(interaction.follow_up_date));
+      setFollowUpStatus(interaction.follow_up_status || 'none');
+      setError('');
+    }
+  }, [interaction]);
 
   if (!isOpen || !interaction) return null;
 

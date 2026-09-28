@@ -7,6 +7,7 @@ export default function Sidebar({ activeItem = 'contacts' }) {
     { key: 'dashboard', label: 'Dashboard', href: '/dashboard' },
     { key: 'contacts', label: 'Contacts', href: '/contacts' },
     { key: 'new-contact', label: 'Add Contact', href: '/contacts/new' },
+    { key: 'sources', label: 'Manage Sources', href: '/sources' },
   ];
 
   return (

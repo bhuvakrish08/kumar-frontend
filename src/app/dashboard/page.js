@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Header from '@/components/Header';
+import AddSourceModal from '@/components/AddSourceModal';
 import { apiFetch, getImageUrl } from '@/lib/api';
 
 export default function DashboardPage() {
@@ -11,6 +12,7 @@ export default function DashboardPage() {
   const [activeSource, setActiveSource] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isSourceModalOpen, setIsSourceModalOpen] = useState(false);
 
   async function loadData(q = '', sourceFilter = '') {
     setLoading(true);
@@ -80,9 +82,31 @@ export default function DashboardPage() {
           )}
         </form>
 
-        {sources.length > 0 && (
-          <div style={{ marginBottom: 20 }}>
-            <div className="section-title">Filter by SOURCE Tag</div>
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <div className="section-title" style={{ margin: 0 }}>Filter by SOURCE Tag</div>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <button
+                className="btn"
+                type="button"
+                onClick={() => setIsSourceModalOpen(true)}
+                style={{ padding: '3px 10px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                title="Quick Add or Manage Sources"
+              >
+                <span>➕ Add Source</span>
+              </button>
+              <Link
+                href="/sources"
+                className="btn"
+                style={{ padding: '3px 10px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                title="Open Sources Module"
+              >
+                <span>⚙️ Manage</span>
+              </Link>
+            </div>
+          </div>
+
+          {sources.length > 0 ? (
             <div className="tags" style={{ overflowX: 'auto', paddingBottom: 4 }}>
               {sources.map(s => (
                 <span
@@ -96,15 +120,27 @@ export default function DashboardPage() {
               {activeSource && (
                 <span
                   className="btn"
-                  style={{ padding: '4px 12px', fontSize: '0.8rem', borderRadius: '999px', background: '#fee2e2', color: '#dc2626', border: 'none' }}
+                  style={{ padding: '4px 12px', fontSize: '0.8rem', borderRadius: '999px', background: '#fee2e2', color: '#dc2626', border: 'none', cursor: 'pointer' }}
                   onClick={() => handleSourceClick('')}
                 >
                   Clear Filter ✕
                 </span>
               )}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="subtle" style={{ fontSize: '0.85rem', fontStyle: 'italic', background: '#f8fafc', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px dashed #cbd5e1', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>No source tags yet. Create source tags to categorize and filter your contacts.</span>
+              <button
+                className="btn primary"
+                type="button"
+                onClick={() => setIsSourceModalOpen(true)}
+                style={{ padding: '3px 10px', fontSize: '0.8rem' }}
+              >
+                + Add Source
+              </button>
+            </div>
+          )}
+        </div>
 
         {error && <div className="error">{error}</div>}
 
@@ -177,6 +213,15 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      <AddSourceModal
+        isOpen={isSourceModalOpen}
+        onClose={() => setIsSourceModalOpen(false)}
+        onSourcesUpdated={(newSources) => {
+          setSources(newSources);
+          loadData(search, activeSource);
+        }}
+      />
     </main>
   );
 }

@@ -21,6 +21,7 @@ export default function ContactForm({ contact, sources = [] }) {
     contact?.introduced_by_contact_id ? String(contact.introduced_by_contact_id) : ''
   );
   const [introducedByName, setIntroducedByName] = useState(contact?.introduced_by_name || '');
+  const [showIntroducerDropdown, setShowIntroducerDropdown] = useState(false);
 
   useEffect(() => {
     // Fetch user's contacts to allow linking introducer
@@ -238,52 +239,113 @@ export default function ContactForm({ contact, sources = [] }) {
           </div>
         </div>
         <div className="form-grid">
-          {/* Link introducer from contacts */}
-          <div className="field">
-            <label>Introduced By (Select From Your Contacts)</label>
-            <select
-              name="introduced_by_contact_id"
-              value={selectedIntroducerId}
-              onChange={(e) => {
-                const idVal = e.target.value;
-                setSelectedIntroducerId(idVal);
-                if (idVal) {
-                  const found = userContacts.find(c => String(c.id) === idVal);
-                  if (found) {
-                    const fullName = [found.first_name, found.last_name].filter(Boolean).join(' ');
-                    setIntroducedByName(fullName);
-                  }
-                }
-              }}
-            >
-              <option value="">-- External Person / None --</option>
-              {userContacts.map(c => {
-                const cName = [c.first_name, c.last_name].filter(Boolean).join(' ');
-                const label = c.company_name ? `${cName} (${c.company_name})` : cName;
-                return (
-                  <option key={c.id} value={c.id}>
-                    👤 {label}
-                  </option>
-                );
-              })}
-            </select>
-            <div className="subtle" style={{ fontSize: '0.75rem', marginTop: '4px' }}>
-              Choose an existing contact from your account to link them directly.
-            </div>
-          </div>
+          {/* Introduced By: Written text field with selectable options */}
+          <div className="field" style={{ position: 'relative' }}>
+            <label>Introduced By</label>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <input
+                type="text"
+                name="introduced_by_name"
+                value={introducedByName}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setIntroducedByName(val);
+                  const matched = userContacts.find(c => {
+                    const fullName = [c.first_name, c.last_name].filter(Boolean).join(' ');
+                    return fullName.toLowerCase() === val.trim().toLowerCase();
+                  });
+                  setSelectedIntroducerId(matched ? String(matched.id) : '');
+                  setShowIntroducerDropdown(true);
+                }}
+                onFocus={() => setShowIntroducerDropdown(true)}
+                onBlur={() => setTimeout(() => setShowIntroducerDropdown(false), 200)}
+                placeholder="Type any name or select from options..."
+                style={{ width: '100%', paddingRight: '30px' }}
+                autoComplete="off"
+              />
+              <input type="hidden" name="introduced_by_contact_id" value={selectedIntroducerId} />
 
-          {/* Introducer Name (or custom if external) */}
-          <div className="field">
-            <label>Introducer Name</label>
-            <input
-              type="text"
-              name="introduced_by_name"
-              value={introducedByName}
-              onChange={(e) => setIntroducedByName(e.target.value)}
-              placeholder="e.g. Larry Rappaport"
-            />
+              <button
+                type="button"
+                tabIndex="-1"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setShowIntroducerDropdown(!showIntroducerDropdown);
+                }}
+                style={{
+                  position: 'absolute',
+                  right: '8px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '0.75rem',
+                  color: 'var(--ink-secondary, #666)',
+                  padding: '4px'
+                }}
+                title="Select from contacts options"
+              >
+                ▼
+              </button>
+            </div>
+
+            {showIntroducerDropdown && userContacts.length > 0 && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  zIndex: 50,
+                  backgroundColor: '#ffffff',
+                  border: '1px solid var(--line, #ccc)',
+                  borderRadius: '6px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  maxHeight: '180px',
+                  overflowY: 'auto',
+                  marginTop: '4px'
+                }}
+              >
+                {userContacts
+                  .filter(c => {
+                    if (!introducedByName) return true;
+                    const cName = [c.first_name, c.last_name].filter(Boolean).join(' ').toLowerCase();
+                    const company = (c.company_name || '').toLowerCase();
+                    const search = introducedByName.toLowerCase();
+                    return cName.includes(search) || company.includes(search);
+                  })
+                  .map(c => {
+                    const cName = [c.first_name, c.last_name].filter(Boolean).join(' ');
+                    const label = c.company_name ? `${cName} (${c.company_name})` : cName;
+                    const isSelected = String(c.id) === selectedIntroducerId;
+                    return (
+                      <div
+                        key={c.id}
+                        onMouseDown={() => {
+                          setSelectedIntroducerId(String(c.id));
+                          setIntroducedByName(cName);
+                          setShowIntroducerDropdown(false);
+                        }}
+                        style={{
+                          padding: '8px 12px',
+                          fontSize: '0.85rem',
+                          cursor: 'pointer',
+                          backgroundColor: isSelected ? '#eff6ff' : 'transparent',
+                          fontWeight: isSelected ? '600' : 'normal',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          borderBottom: '1px solid #f1f5f9'
+                        }}
+                      >
+                        <span>👤 {label}</span>
+                        {isSelected && <span style={{ color: '#2563eb', fontSize: '0.75rem' }}>✓</span>}
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
             <div className="subtle" style={{ fontSize: '0.75rem', marginTop: '4px' }}>
-              Name of the person who made the introduction.
+              Write any custom text, or click ▼ to select an option from your contacts.
             </div>
           </div>
 

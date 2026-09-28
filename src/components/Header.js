@@ -36,6 +36,9 @@ export default function Header() {
             <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>+</span>
             <span>New Contact</span>
           </Link>
+          <Link className="btn" href="/sources" title="Manage Source Tags">
+            <span>🏷️ Sources</span>
+          </Link>
           <button
             className="btn"
             type="button"
