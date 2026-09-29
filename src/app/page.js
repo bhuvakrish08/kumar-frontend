@@ -83,8 +83,8 @@ export default function LoginPage() {
       setError('Please enter your mobile number');
       return;
     }
-    if (!password || password.length < 6) {
-      setError('Password must be at least 6 characters long');
+    if (!password || password.length < 10) {
+      setError('Password must be at least 10 characters long');
       return;
     }
 

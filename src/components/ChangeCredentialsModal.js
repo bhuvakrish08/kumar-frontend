@@ -16,8 +16,8 @@ export default function ChangeCredentialsModal({ isOpen, onClose }) {
     setError('');
     setSuccess('');
 
-    if (!newPassword || newPassword.trim() === '') {
-      setError('Please enter a new password.');
+    if (!newPassword || newPassword.trim().length < 10) {
+      setError('Password must be at least 10 characters long.');
       return;
     }
 

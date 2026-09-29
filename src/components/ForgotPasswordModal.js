@@ -98,8 +98,8 @@ export default function ForgotPasswordModal({ isOpen, onClose, onPasswordResetSu
     const cleanPass = newPassword.trim();
     const cleanConfirm = confirmPassword.trim();
 
-    if (!cleanPass || cleanPass.length < 6) {
-      setError('New password must be at least 6 characters long.');
+    if (!cleanPass || cleanPass.length < 10) {
+      setError('New password must be at least 10 characters long.');
       return;
     }
     if (cleanPass !== cleanConfirm) {
