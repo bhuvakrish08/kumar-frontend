@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
+import ForgotPasswordModal from '@/components/ForgotPasswordModal';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,8 +19,10 @@ export default function LoginPage() {
   const [mobileNo, setMobileNo] = useState('');
 
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
 
   // Switch between Login and Register modes
   function switchMode(newMode) {
@@ -205,6 +208,25 @@ export default function LoginPage() {
           </div>
         )}
 
+        {/* Success Alert (e.g. after password reset) */}
+        {successMsg && (
+          <div style={{
+            background: 'rgba(34, 197, 94, 0.1)',
+            color: '#15803d',
+            border: '1px solid rgba(34, 197, 94, 0.25)',
+            padding: '10px 14px',
+            borderRadius: '8px',
+            fontSize: '0.88rem',
+            marginBottom: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <span>✓</span>
+            <span>{successMsg}</span>
+          </div>
+        )}
+
         {/* SIGN IN FORM */}
         {mode === 'login' ? (
           <form onSubmit={handleLogin} className="grid" style={{ gap: '16px' }}>
@@ -229,7 +251,7 @@ export default function LoginPage() {
 
             {/* Password */}
             <div className="field">
-              <label style={{ margin: 0 }}>Password</label>
+              <label>Password</label>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -268,6 +290,25 @@ export default function LoginPage() {
                       <circle cx="12" cy="12" r="3" />
                     </svg>
                   )}
+                </button>
+              </div>
+
+              {/* Forgot Password Link below Password input */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsForgotPasswordOpen(true)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    color: 'var(--primary, #2563eb)',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Forgot Password?
                 </button>
               </div>
             </div>
@@ -423,6 +464,15 @@ export default function LoginPage() {
           </form>
         )}
       </div>
+
+      {/* Forgot Password Brevo OTP Modal */}
+      <ForgotPasswordModal
+        isOpen={isForgotPasswordOpen}
+        onClose={() => setIsForgotPasswordOpen(false)}
+        onPasswordResetSuccess={() => {
+          setSuccessMsg('Your password has been reset successfully. Please sign in with your new password.');
+        }}
+      />
     </main>
   );
 }
