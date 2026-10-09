@@ -2,12 +2,32 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export function getImageUrl(pathOrUrl) {
   if (!pathOrUrl) return '';
-  if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) {
-    return pathOrUrl;
+
+  let cleanPath = pathOrUrl;
+  // If stored in DB with http://localhost:5000/uploads/... or http://127.0.0.1:5000/uploads/...
+  // strip the domain prefix so it uses the active API_BASE_URL or relative HTTPS path
+  if (cleanPath.startsWith('http://localhost:5000') || cleanPath.startsWith('https://localhost:5000') ||
+      cleanPath.startsWith('http://127.0.0.1:5000') || cleanPath.startsWith('https://127.0.0.1:5000')) {
+    cleanPath = cleanPath.replace(/^https?:\/\/(localhost|127\.0\.0\.1):5000/, '');
   }
+
+  if (cleanPath.startsWith('http://') || cleanPath.startsWith('https://')) {
+    // If page is HTTPS but URL is HTTP, attempt protocol upgrade to avoid Mixed Content
+    if (typeof window !== 'undefined' && window.location.protocol === 'https:' && cleanPath.startsWith('http://')) {
+      return cleanPath.replace(/^http:\/\//, 'https://');
+    }
+    return cleanPath;
+  }
+
   const base = API_BASE_URL.replace(/\/+$/, '');
-  const cleanPath = pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`;
-  return `${base}${cleanPath}`;
+  const formattedPath = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
+
+  let fullUrl = `${base}${formattedPath}`;
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:' && fullUrl.startsWith('http://')) {
+    fullUrl = fullUrl.replace(/^http:\/\//, 'https://');
+  }
+
+  return fullUrl;
 }
 
 export async function apiFetch(endpoint, options = {}) {

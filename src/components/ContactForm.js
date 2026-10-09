@@ -42,7 +42,7 @@ export default function ContactForm({ contact, sources = [] }) {
 
     try {
       const res = await apiUploadFile(file);
-      const urlToSave = res.url || res.relativeUrl;
+      const urlToSave = res.relativeUrl || res.url;
       setPhotoUrl(urlToSave);
     } catch (err) {
       setError(err.message || 'Image upload failed');
