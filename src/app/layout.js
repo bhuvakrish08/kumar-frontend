@@ -1,7 +1,7 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Kumarda Contacts | Executive Relationship Memory',
+  title: 'Dossier | Executive Relationship Memory',
   description: 'Your private relationship memory, contact management, and narrative biography system.'
 };
 

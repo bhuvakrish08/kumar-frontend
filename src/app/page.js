@@ -138,11 +138,11 @@ export default function LoginPage() {
               borderRadius: 'var(--radius-lg)',
             }}
           >
-            K
+            D
           </div>
 
           <h1 className="brand" style={{ fontSize: '26px', marginBottom: '4px' }}>
-            Kumarda Contacts
+            Dossier
           </h1>
 
           <p className="subtle" style={{ fontSize: '0.9rem' }}>

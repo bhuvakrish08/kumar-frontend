@@ -20,9 +20,9 @@ export default function Header() {
   return (
     <header className="topbar">
       <Link href="/dashboard" className="brand-wrap">
-        <div className="brand-icon">K</div>
+        <div className="brand-icon">D</div>
         <div>
-          <div className="brand">Kumarda Contacts</div>
+          <div className="brand">Dossier</div>
           <div className="subtle">Executive Relationship Memory</div>
         </div>
       </Link>
