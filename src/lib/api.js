@@ -1,4 +1,42 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+function getBaseApiUrl() {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (typeof window !== 'undefined') {
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    // If in live browser and NEXT_PUBLIC_API_URL is missing or still points to localhost,
+    // use relative path so Next.js rewrites proxy the request same-origin to the backend!
+    if (!isLocalhost && (!envUrl || envUrl.includes('localhost') || envUrl.includes('127.0.0.1'))) {
+      return '';
+    }
+  }
+  return (envUrl || 'http://localhost:5000').replace(/\/+$/, '');
+}
+
+export function resolveApiUrl(endpoint) {
+  let url;
+  if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+    url = endpoint;
+  } else {
+    const base = getBaseApiUrl();
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+
+    if (!base) {
+      url = cleanEndpoint.startsWith('/api/v1/') ? cleanEndpoint : `/api/v1${cleanEndpoint}`;
+    } else if (base.endsWith('/api/v1')) {
+      url = `${base}${cleanEndpoint}`;
+    } else if (cleanEndpoint.startsWith('/api/v1/')) {
+      url = `${base}${cleanEndpoint}`;
+    } else {
+      url = `${base}/api/v1${cleanEndpoint}`;
+    }
+  }
+
+  // Prevent Mixed Content errors: upgrade HTTP to HTTPS on HTTPS pages
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:' && url.startsWith('http://')) {
+    url = url.replace(/^http:\/\//, 'https://');
+  }
+
+  return url;
+}
 
 export function getImageUrl(pathOrUrl) {
   if (!pathOrUrl) return '';
@@ -19,10 +57,10 @@ export function getImageUrl(pathOrUrl) {
     return cleanPath;
   }
 
-  const base = API_BASE_URL.replace(/\/+$/, '');
+  const base = getBaseApiUrl();
   const formattedPath = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
 
-  let fullUrl = `${base}${formattedPath}`;
+  let fullUrl = base ? `${base}${formattedPath}` : formattedPath;
   if (typeof window !== 'undefined' && window.location.protocol === 'https:' && fullUrl.startsWith('http://')) {
     fullUrl = fullUrl.replace(/^http:\/\//, 'https://');
   }
@@ -31,21 +69,7 @@ export function getImageUrl(pathOrUrl) {
 }
 
 export async function apiFetch(endpoint, options = {}) {
-  let url;
-  if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
-    url = endpoint;
-  } else {
-    const base = API_BASE_URL.replace(/\/+$/, '');
-    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-
-    if (base.endsWith('/api/v1')) {
-      url = `${base}${cleanEndpoint}`;
-    } else if (cleanEndpoint.startsWith('/api/v1/')) {
-      url = `${base}${cleanEndpoint}`;
-    } else {
-      url = `${base}/api/v1${cleanEndpoint}`;
-    }
-  }
+  const url = resolveApiUrl(endpoint);
 
   const defaultHeaders = {
     'Content-Type': 'application/json',
@@ -91,21 +115,7 @@ export async function apiFetch(endpoint, options = {}) {
  * Executes a streaming fetch with real-time SSE event updates
  */
 export async function apiStreamFetch(endpoint, options = {}, onProgress = null) {
-  let url;
-  if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
-    url = endpoint;
-  } else {
-    const base = API_BASE_URL.replace(/\/+$/, '');
-    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-
-    if (base.endsWith('/api/v1')) {
-      url = `${base}${cleanEndpoint}`;
-    } else if (cleanEndpoint.startsWith('/api/v1/')) {
-      url = `${base}${cleanEndpoint}`;
-    } else {
-      url = `${base}/api/v1${cleanEndpoint}`;
-    }
-  }
+  const url = resolveApiUrl(endpoint);
 
   const defaultHeaders = {
     'Content-Type': 'application/json',
@@ -187,8 +197,7 @@ export async function apiStreamFetch(endpoint, options = {}, onProgress = null) 
 }
 
 export async function apiUploadFile(file) {
-  const base = API_BASE_URL.replace(/\/+$/, '');
-  const url = base.endsWith('/api/v1') ? `${base}/upload` : `${base}/api/v1/upload`;
+  const url = resolveApiUrl('/upload');
   const formData = new FormData();
   formData.append('file', file);
 

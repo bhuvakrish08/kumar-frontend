@@ -52,8 +52,8 @@ export default function LoginPage() {
         throw new Error('Invalid login response from server.');
       }
 
-      router.push('/dashboard');
-      router.refresh();
+      // Hard navigation to dashboard ensures clean browser cookie transmission in live
+      window.location.href = '/dashboard';
 
     } catch (err) {
       console.error('Login error:', err);
@@ -109,8 +109,7 @@ export default function LoginPage() {
       }
 
       // Automatically logged in via HTTP-only cookie, redirect to dashboard
-      router.push('/dashboard');
-      router.refresh();
+      window.location.href = '/dashboard';
 
     } catch (err) {
       console.error('Registration error:', err);

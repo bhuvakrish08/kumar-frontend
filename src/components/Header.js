@@ -13,8 +13,7 @@ export default function Header() {
     } catch (err) {
       console.warn('Logout warning:', err.message);
     } finally {
-      router.push('/');
-      router.refresh();
+      window.location.href = '/';
     }
   }
 
