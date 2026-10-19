@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 export default function CommunicationStrip({ contact }) {
   const [selectedPhone, setSelectedPhone] = useState(null);
+  const [selectedEmail, setSelectedEmail] = useState(null);
 
   if (!contact) return null;
 
@@ -13,39 +14,67 @@ export default function CommunicationStrip({ contact }) {
     phones.push({ label: 'Primary', number: contact.primary_phone });
   }
 
-  const activePhone = selectedPhone || (phones.length > 0 ? phones[0].number : null);
-  const cleanPhone = activePhone ? activePhone.replace(/\D/g, '') : '';
-  const email = contact.primary_email || contact.work_email;
+  const emails = [];
+  if (contact.primary_email) emails.push({ label: 'Primary', email: contact.primary_email });
+  if (contact.work_email && contact.work_email !== contact.primary_email) {
+    emails.push({ label: 'Work', email: contact.work_email });
+  }
 
-  if (!activePhone && !email) return null;
+  const activePhone = selectedPhone || (phones.length > 0 ? phones[0].number : null);
+  const activeEmail = selectedEmail || (emails.length > 0 ? emails[0].email : null);
+
+  const cleanPhone = activePhone ? activePhone.replace(/\D/g, '') : '';
+
+  if (!activePhone && !activeEmail) return null;
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm mb-6 flex flex-wrap items-center justify-between gap-4">
-      <div className="flex items-center space-x-3">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Quick Actions:</span>
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Communication Actions:</span>
+        
+        {/* Phone Selector if multiple */}
         {phones.length > 1 && (
-          <select
-            value={activePhone}
-            onChange={(e) => setSelectedPhone(e.target.value)}
-            className="text-xs font-medium bg-gray-50 border border-gray-200 rounded-md px-2 py-1 text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            {phones.map((p, idx) => (
-              <option key={idx} value={p.number}>
-                {p.label}: {p.number}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center space-x-1.5">
+            <span className="text-[11px] text-gray-400">Phone:</span>
+            <select
+              value={activePhone}
+              onChange={(e) => setSelectedPhone(e.target.value)}
+              className="text-xs font-semibold bg-gray-50 border border-gray-300 rounded-md px-2 py-1 text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            >
+              {phones.map((p, idx) => (
+                <option key={idx} value={p.number}>
+                  {p.label}: {p.number}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Email Selector if multiple */}
+        {emails.length > 1 && (
+          <div className="flex items-center space-x-1.5">
+            <span className="text-[11px] text-gray-400">Email:</span>
+            <select
+              value={activeEmail}
+              onChange={(e) => setSelectedEmail(e.target.value)}
+              className="text-xs font-semibold bg-gray-50 border border-gray-300 rounded-md px-2 py-1 text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            >
+              {emails.map((em, idx) => (
+                <option key={idx} value={em.email}>
+                  {em.label}: {em.email}
+                </option>
+              ))}
+            </select>
+          </div>
         )}
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex flex-wrap items-center gap-2">
         {/* Call Link */}
         {activePhone && (
           <a
             href={`tel:${cleanPhone}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-xs font-semibold transition"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-xs font-bold transition shadow-sm"
             title={`Call ${activePhone}`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,9 +88,7 @@ export default function CommunicationStrip({ contact }) {
         {activePhone && (
           <a
             href={`sms:${cleanPhone}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-semibold transition"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-bold transition shadow-sm"
             title={`SMS to ${activePhone}`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,7 +104,7 @@ export default function CommunicationStrip({ contact }) {
             href={`https://wa.me/${cleanPhone}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 rounded-lg text-xs font-semibold transition"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 rounded-lg text-xs font-bold transition shadow-sm"
             title={`WhatsApp ${activePhone}`}
           >
             <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -88,13 +115,11 @@ export default function CommunicationStrip({ contact }) {
         )}
 
         {/* Email Link */}
-        {email && (
+        {activeEmail && (
           <a
-            href={`mailto:${email}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 rounded-lg text-xs font-semibold transition"
-            title={`Email ${email}`}
+            href={`mailto:${activeEmail}`}
+            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 rounded-lg text-xs font-bold transition shadow-sm"
+            title={`Email ${activeEmail}`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />

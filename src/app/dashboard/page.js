@@ -60,31 +60,56 @@ export default function DashboardPage() {
   return (
     <main className="shell">
       <Header />
-      
-      {/* Sprint 2 Tell Dossier prominent input */}
-      <TellDossierInput
-        onDossierUpdated={() => {
-          loadData(search, activeSource);
-          setRefreshCommitmentsSignal(prev => prev + 1);
-        }}
-      />
 
-      {/* Sprint 2 Ask Dossier query box */}
-      <AskDossierBox />
+      {/* Hero: Primary Action - Tell Dossier */}
+      <section aria-label="Tell Dossier Memory Capture">
+        <TellDossierInput
+          onDossierUpdated={() => {
+            loadData(search, activeSource);
+            setRefreshCommitmentsSignal(prev => prev + 1);
+          }}
+        />
+      </section>
 
-      {/* Sprint 2 Commitments & Reminders widget */}
-      <div className="mb-8">
-        <CommitmentsWidget refreshSignal={refreshCommitmentsSignal} />
+      {/* Secondary Actions Grid: Ask Dossier & Open Commitments */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <section aria-label="Ask Dossier Intelligence Retrieval">
+          <AskDossierBox />
+        </section>
+
+        <section aria-label="Active Commitments and Reminders">
+          <CommitmentsWidget refreshSignal={refreshCommitmentsSignal} />
+        </section>
       </div>
 
-      <div className="card">
-        <form className="search" onSubmit={handleSearchSubmit}>
+      {/* Relationships Directory & Filter */}
+      <section className="card" aria-label="Relationship Directory">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 border-b border-gray-100 pb-4">
+          <div>
+            <h3 className="text-base font-bold text-gray-900">Relationships & Living Directory</h3>
+            <p className="text-xs text-gray-500">
+              {contacts.length} total contact{contacts.length === 1 ? '' : 's'} recorded with provenance and context
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Link
+              href="/contacts/new"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 transition"
+              title="Add a contact manually without AI extraction"
+            >
+              <span>+ Manual Add</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        <form className="search mb-4" onSubmit={handleSearchSubmit}>
           <input
             name="q"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search name, company, SOURCE tag, city, spouse, interest..."
-            autoFocus
+            placeholder="Search name, company, SOURCE tag, city, introducer, or context..."
           />
           <button className="btn primary" type="submit">
             Search
@@ -103,147 +128,126 @@ export default function DashboardPage() {
           )}
         </form>
 
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <div className="section-title" style={{ margin: 0 }}>Filter by SOURCE Tag</div>
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        {/* SOURCE Tags Bar */}
+        <div className="mb-5">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">Context & Source Tags:</span>
+            <div className="flex items-center space-x-2">
               <button
-                className="btn"
+                className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold"
                 type="button"
                 onClick={() => setIsSourceModalOpen(true)}
-                style={{ padding: '3px 10px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}
-                title="Quick Add or Manage Sources"
               >
-                <span>➕ Add Source</span>
+                + Add Source
               </button>
-              <Link
-                href="/sources"
-                className="btn"
-                style={{ padding: '3px 10px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}
-                title="Open Sources Module"
-              >
-                <span>⚙️ Manage</span>
+              <Link href="/sources" className="text-xs text-gray-500 hover:text-gray-700">
+                Manage
               </Link>
             </div>
           </div>
 
           {sources.length > 0 ? (
-            <div className="tags" style={{ overflowX: 'auto', paddingBottom: 4 }}>
+            <div className="tags flex flex-wrap gap-1.5">
               {sources.map(s => (
                 <span
                   key={s.id}
-                  className={`tag ${activeSource === s.name ? 'active' : ''}`}
+                  className={`tag cursor-pointer ${activeSource === s.name ? 'active' : ''}`}
                   onClick={() => handleSourceClick(s.name)}
                 >
                   {s.name} ({s.contact_count})
                 </span>
               ))}
               {activeSource && (
-                <span
-                  className="btn"
-                  style={{ padding: '4px 12px', fontSize: '0.8rem', borderRadius: '999px', background: '#fee2e2', color: '#dc2626', border: 'none', cursor: 'pointer' }}
+                <button
+                  type="button"
+                  className="text-xs px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 hover:bg-rose-200 transition font-medium"
                   onClick={() => handleSourceClick('')}
                 >
-                  Clear Filter ✕
-                </span>
+                  Clear filter ✕
+                </button>
               )}
             </div>
           ) : (
-            <div className="subtle" style={{ fontSize: '0.85rem', fontStyle: 'italic', background: '#f8fafc', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px dashed #cbd5e1', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>No source tags yet. Create source tags to categorize and filter your contacts.</span>
-              <button
-                className="btn primary"
-                type="button"
-                onClick={() => setIsSourceModalOpen(true)}
-                style={{ padding: '3px 10px', fontSize: '0.8rem' }}
-              >
-                + Add Source
-              </button>
-            </div>
+            <p className="text-xs text-gray-400 italic">No source tags defined yet.</p>
           )}
         </div>
 
         {error && <div className="error">{error}</div>}
 
         {loading ? (
-          <div className="subtle" style={{ padding: '30px 0', textTransform: 'center', fontStyle: 'italic' }}>
-            Loading relationship memory...
+          <div className="py-8 text-center text-xs text-gray-500 italic">
+            Loading relationships...
+          </div>
+        ) : contacts.length === 0 ? (
+          <div className="py-12 text-center text-gray-400 space-y-2">
+            <p className="text-sm font-semibold">No contacts found matching your criteria.</p>
+            <p className="text-xs">Use "Tell Dossier" above to capture a memory or create a new contact manually.</p>
           </div>
         ) : (
-          <div className="list">
+          <div className="list divide-y divide-gray-100">
             {contacts.map(c => {
               const name = [c.first_name, c.middle_name, c.last_name].filter(Boolean).join(' ');
+              const phone = c.mobile_phone || c.primary_phone;
               return (
-                <Link href={`/contacts/${c.id}`} className="contact-row" key={c.id}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                <Link
+                  href={`/contacts/${c.id}`}
+                  className="contact-row flex items-center justify-between p-3.5 hover:bg-slate-50/80 rounded-xl transition"
+                  key={c.id}
+                >
+                  <div className="flex items-center space-x-3.5">
                     {c.photo_url ? (
-                      <span
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          window.open(getImageUrl(c.photo_url), '_blank');
-                        }}
-                        title="Click to view full image in new tab"
-                        style={{ cursor: 'pointer', flexShrink: 0, display: 'inline-block' }}
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={getImageUrl(c.photo_url)}
-                          alt={name}
-                          style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '2px solid #e2e8f0' }}
-                        />
-                      </span>
+                      <img
+                        src={getImageUrl(c.photo_url)}
+                        alt={name}
+                        className="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm"
+                      />
                     ) : (
-                      <div
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)',
-                          color: '#334155',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontWeight: 700,
-                          fontSize: '1rem',
-                          flexShrink: 0
-                        }}
-                      >
-                        {c.first_name ? c.first_name[0].toUpperCase() : '?'}
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-slate-200 text-indigo-800 font-bold flex items-center justify-center text-sm border border-indigo-200 shadow-sm">
+                        {c.first_name ? c.first_name.charAt(0).toUpperCase() : '?'}
                       </div>
                     )}
+
                     <div>
-                      <strong style={{ color: 'var(--ink)', fontSize: '1rem' }}>{name}</strong>
-                      <div className="subtle" style={{ fontSize: '0.85rem' }}>{c.job_title || 'No title listed'}</div>
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-gray-900 text-sm hover:text-indigo-600 transition">{name}</span>
+                        {c.introduced_by_name && (
+                          <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200 font-medium">
+                            via {c.introduced_by_name}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-500 flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                        {c.job_title && <span className="text-gray-700 font-medium">{c.job_title}</span>}
+                        {c.job_title && c.company_name && <span>at</span>}
+                        {c.company_name && <span className="font-semibold text-gray-800">{c.company_name}</span>}
+                        {phone && <span className="text-gray-400">• {phone}</span>}
+                      </div>
                     </div>
                   </div>
-                  <div>{c.company_name || <span className="subtle">No company</span>}</div>
-                  <div className="desktop-only" style={{ fontSize: '0.875rem' }}>
-                    {c.source_names ? (
-                      <span style={{ background: '#e8f0fe', color: '#1a73e8', border: '1px solid #d2e3fc', padding: '3px 8px', borderRadius: '6px', fontWeight: 600, fontSize: '0.8rem' }}>
+
+                  <div className="text-right flex items-center space-x-3">
+                    {c.source_names && (
+                      <span className="text-[10px] text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full font-semibold hidden sm:inline-block">
                         {c.source_names}
                       </span>
-                    ) : (
-                      <span className="subtle">No SOURCE tags</span>
                     )}
+                    <span className="text-gray-400 text-xs">→</span>
                   </div>
-                  <div className="contact-arrow">›</div>
                 </Link>
               );
             })}
-            {!contacts.length && <div className="empty">No contacts matched that memory search.</div>}
           </div>
         )}
-      </div>
+      </section>
 
-      <AddSourceModal
-        isOpen={isSourceModalOpen}
-        onClose={() => setIsSourceModalOpen(false)}
-        onSourcesUpdated={(newSources) => {
-          setSources(newSources);
-          loadData(search, activeSource);
-        }}
-      />
+      {/* Add Source Modal */}
+      {isSourceModalOpen && (
+        <AddSourceModal
+          isOpen={isSourceModalOpen}
+          onClose={() => setIsSourceModalOpen(false)}
+          onSourceAdded={() => loadData(search, activeSource)}
+        />
+      )}
     </main>
   );
 }

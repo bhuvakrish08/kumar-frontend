@@ -34,9 +34,11 @@ export default function ContactDetailPage() {
   const id = params.id;
 
   const [data, setData] = useState(null);
+  const [historyData, setHistoryData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editingInteraction, setEditingInteraction] = useState(null);
+  const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
 
   async function loadContact() {
     setLoading(true);
@@ -44,6 +46,13 @@ export default function ContactDetailPage() {
     try {
       const res = await apiFetch(`/contacts/${id}`);
       setData(res);
+      apiFetch(`/tell-dossier/contact-history/${id}`)
+        .then(hRes => {
+          if (hRes && Array.isArray(hRes.history)) {
+            setHistoryData(hRes.history);
+          }
+        })
+        .catch(() => {});
     } catch (err) {
       setError(err.message || 'Contact not found');
     } finally {
@@ -122,333 +131,386 @@ export default function ContactDetailPage() {
     <main className="shell">
       <Header />
 
-      {/* Person Communication Strip (Call/Text/WhatsApp/Email) */}
-      <CommunicationStrip contact={c} />
+      {/* 1. HERO HEADER: Person name, current title/company, photo, and quick edit */}
+      <div className="card hero mb-6 shadow-sm border border-gray-200">
+        <div className="flex justify-between items-start flex-wrap gap-4">
+          <div className="flex items-center space-x-4">
+            {c.photo_url ? (
+              <a
+                href={getImageUrl(c.photo_url)}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="View full image"
+                className="shrink-0"
+              >
+                <img
+                  src={getImageUrl(c.photo_url)}
+                  alt={name}
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-indigo-600 shadow-md"
+                />
+              </a>
+            ) : (
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-indigo-600 to-indigo-800 text-white flex items-center justify-center font-bold text-2xl shadow-md shrink-0">
+                {c.first_name ? c.first_name[0].toUpperCase() : '?'}
+              </div>
+            )}
 
-      <div className="grid two">
-        <section className="grid" style={{ gap: '20px' }}>
-          {/* Commitments Widget for Contact */}
-          <CommitmentsWidget contactId={id} />
-
-          {/* Hero & Narrative Briefing */}
-          <div className="card hero">
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-                {c.photo_url ? (
-                  <a
-                    href={getImageUrl(c.photo_url)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Click to open image in new tab"
-                    style={{ cursor: 'pointer', display: 'inline-block', flexShrink: 0 }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={getImageUrl(c.photo_url)}
-                      alt={name}
-                      style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '3px solid #1a73e8', boxShadow: 'var(--shadow-md)' }}
-                    />
-                  </a>
-                ) : (
-                  <div
-                    style={{
-                      width: 72,
-                      height: 72,
-                      borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                      color: '#ffffff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 700,
-                      fontSize: '1.75rem',
-                      fontFamily: 'var(--font-serif)',
-                      flexShrink: 0
-                    }}
-                  >
-                    {c.first_name ? c.first_name[0].toUpperCase() : '?'}
-                  </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">{name}</h1>
+                {c.introduced_by_name && (
+                  <span className="text-[11px] bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full font-semibold">
+                    via {c.introduced_by_name}
+                  </span>
                 )}
-                <div>
-                  <h1 className="name" style={{ margin: 0 }}>{name}</h1>
-                  <div className="headline" style={{ marginTop: '4px' }}>{headline || 'A person worth remembering'}</div>
-                </div>
               </div>
-
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <Link className="btn" href={`/contacts/${c.id}/edit`}>Edit Contact</Link>
-                <button className="btn danger" onClick={handleDelete}>Delete</button>
-              </div>
-            </div>
-
-            {/* Narrative biography generated deterministically by backend */}
-            <div className="bio-card" style={{ marginTop: '18px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '1.1rem' }}>🧠</span>
-                <strong style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--ink-secondary)' }}>
-                  Executive Narrative Briefing
-                </strong>
-              </div>
-              <p className="bio" style={{ margin: 0, lineHeight: 1.6 }}>{data.narrative}</p>
+              <p className="text-xs sm:text-sm text-gray-600 mt-1 font-medium">{headline || 'A relationship worth remembering'}</p>
             </div>
           </div>
 
-          {/* 🤝 How I Know This Person */}
+          <div className="flex items-center space-x-2">
+            <Link className="btn" href={`/contacts/${c.id}/edit`}>Edit Profile</Link>
+            <button className="btn danger" onClick={handleDelete}>Delete</button>
+          </div>
+        </div>
+
+        {/* 2. COMMUNICATION ACTIONS: Call, Text, WhatsApp, Email */}
+        <div className="mt-4 pt-4 border-t border-gray-100">
+          <CommunicationStrip contact={c} />
+        </div>
+
+        {/* 3. LIVING EXECUTIVE NARRATIVE: "Who is this person to me?" */}
+        <div className="bio-card mt-3 bg-gradient-to-r from-slate-50 to-indigo-50/40 p-4 rounded-xl border border-indigo-100/80">
+          <div className="flex items-center space-x-2 mb-2">
+            <span className="text-base">🧠</span>
+            <strong className="text-xs uppercase tracking-wider text-indigo-900 font-extrabold">
+              Relationship Narrative Briefing
+            </strong>
+          </div>
+          <p className="text-xs sm:text-sm text-gray-800 leading-relaxed m-0 font-medium">{data.narrative}</p>
+        </div>
+      </div>
+
+      <div className="grid two gap-6">
+        {/* Main Column */}
+        <section className="grid gap-6">
+
+          {/* 4. 🤝 HOW I KNOW THIS PERSON & RELATIONSHIP SUMMARY */}
           <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', paddingBottom: '10px', borderBottom: '1px solid var(--line)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontSize: '1.25rem' }}>🤝</span>
-                <h3 className="section-title" style={{ margin: 0 }}>How I Know This Person</h3>
+            <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-100">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">🤝</span>
+                <h3 className="section-title m-0 text-sm font-bold text-gray-900">How I Know This Person</h3>
               </div>
-              <Link href={`/contacts/${c.id}/edit`} className="subtle" style={{ fontSize: '0.85rem', textDecoration: 'none' }}>
+              <Link href={`/contacts/${c.id}/edit`} className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">
                 Edit ↗
               </Link>
             </div>
 
             {hasMetInfo ? (
-              <div className="meta" style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '12px 16px', fontSize: '0.95rem' }}>
-                <div style={{ fontWeight: 600, color: 'var(--ink-secondary)' }}>Introduced by</div>
+              <div className="meta grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 <div>
-                  {data.introduced_by_contact ? (
-                    <Link
-                      href={`/contacts/${data.introduced_by_contact.id}`}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        background: '#e8f0fe',
-                        color: '#1a73e8',
-                        padding: '3px 10px',
-                        borderRadius: '6px',
-                        fontWeight: 600,
-                        textDecoration: 'none',
-                        border: '1px solid #d2e3fc'
-                      }}
-                      title="View linked introducer contact profile"
-                    >
-                      👤 {data.introduced_by_contact.first_name} {data.introduced_by_contact.last_name}
-                      {data.introduced_by_contact.company_name ? ` (${data.introduced_by_contact.company_name})` : ''} ↗
-                    </Link>
-                  ) : c.introduced_by_name ? (
-                    <strong>{c.introduced_by_name}</strong>
-                  ) : (
-                    <span className="subtle">—</span>
-                  )}
+                  <span className="font-semibold text-gray-500 block">Introduced By:</span>
+                  <div className="mt-0.5">
+                    {data.introduced_by_contact ? (
+                      <Link
+                        href={`/contacts/${data.introduced_by_contact.id}`}
+                        className="inline-flex items-center space-x-1 font-bold text-indigo-600 hover:text-indigo-800"
+                      >
+                        <span>👤 {data.introduced_by_contact.first_name} {data.introduced_by_contact.last_name}</span>
+                        {data.introduced_by_contact.company_name ? ` (${data.introduced_by_contact.company_name})` : ''} ↗
+                      </Link>
+                    ) : c.introduced_by_name ? (
+                      <span className="font-bold text-gray-900">{c.introduced_by_name}</span>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
+                  </div>
                 </div>
 
-                <div style={{ fontWeight: 600, color: 'var(--ink-secondary)' }}>Where / Context</div>
-                <div>{c.met_context || <span className="subtle">—</span>}</div>
+                <div>
+                  <span className="font-semibold text-gray-500 block">Meeting Context:</span>
+                  <span className="font-medium text-gray-800">{c.met_context || '—'}</span>
+                </div>
 
-                <div style={{ fontWeight: 600, color: 'var(--ink-secondary)' }}>Place</div>
-                <div>{c.met_place || <span className="subtle">—</span>}</div>
+                <div>
+                  <span className="font-semibold text-gray-500 block">First Met Location:</span>
+                  <span className="font-medium text-gray-800">{c.met_place || '—'}</span>
+                </div>
 
-                <div style={{ fontWeight: 600, color: 'var(--ink-secondary)' }}>Date first met</div>
-                <div>{fmt(c.met_date) || <span className="subtle">—</span>}</div>
+                <div>
+                  <span className="font-semibold text-gray-500 block">Date First Met:</span>
+                  <span className="font-medium text-gray-800">{fmt(c.met_date) || '—'}</span>
+                </div>
 
                 {c.how_we_met_notes && (
-                  <>
-                    <div style={{ fontWeight: 600, color: 'var(--ink-secondary)' }}>Meeting notes</div>
-                    <div style={{ color: 'var(--ink)', whiteSpace: 'pre-wrap' }}>{c.how_we_met_notes}</div>
-                  </>
+                  <div className="sm:col-span-2 pt-1 border-t border-gray-100">
+                    <span className="font-semibold text-gray-500 block mb-1">Context Notes:</span>
+                    <p className="text-gray-700 bg-gray-50 p-2.5 rounded-lg border border-gray-200/60 leading-relaxed whitespace-pre-wrap">
+                      {c.how_we_met_notes}
+                    </p>
+                  </div>
                 )}
               </div>
             ) : (
-              <div className="empty" style={{ textAlign: 'left', padding: '12px 0' }}>
-                No introduction or meeting details recorded yet.{' '}
-                <Link href={`/contacts/${c.id}/edit`} style={{ color: 'var(--brand)', textDecoration: 'underline' }}>
-                  Add how you met
-                </Link>
+              <div className="text-xs text-gray-400 italic">
+                No meeting context recorded yet.{' '}
+                <Link href={`/contacts/${c.id}/edit`} className="text-indigo-600 underline">Add details</Link>
               </div>
             )}
           </div>
 
-          {/* SOURCE Tags */}
+          {/* 5. 🎯 OPEN COMMITMENTS AND FOLLOW-UPS */}
           <div className="card">
-            <h3 className="section-title">SOURCE Tags</h3>
-            <div className="tags">
-              {data.sources.map(s => (
-                <span className="tag active" key={s.id}>{s.name}</span>
-              ))}
-              {!data.sources.length && <span className="empty">No SOURCE tags attached yet.</span>}
+            <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">🎯</span>
+                <h3 className="section-title m-0 text-sm font-bold text-gray-900">Open Commitments & Follow-ups</h3>
+              </div>
             </div>
+            <CommitmentsWidget contactId={id} />
           </div>
 
-          {/* 📅 Interactions Timeline */}
+          {/* 6. 🕒 RECENT INTERACTIONS & TIMELINE */}
           <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '1.25rem' }}>📅</span>
-                <h3 className="section-title" style={{ margin: 0 }}>Interaction Timeline</h3>
+            <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-100">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">🕒</span>
+                <h3 className="section-title m-0 text-sm font-bold text-gray-900">Recent Interactions & Timeline</h3>
               </div>
-              <span className="subtle" style={{ fontSize: '0.85rem' }}>
-                {data.interactions.length} event{data.interactions.length === 1 ? '' : 's'} (newest first)
-              </span>
+              <span className="text-xs text-gray-400">{data.interactions.length} recorded</span>
             </div>
 
-            <div className="timeline">
+            <div className="timeline space-y-4">
               {data.interactions.map(i => {
                 const icon = getInteractionIcon(i.interaction_type);
-                const hasFollowUp = i.follow_up_date || (i.follow_up_status && i.follow_up_status !== 'none');
-
+                const hasFollowUp = i.follow_up_date || i.follow_up_status;
                 return (
-                  <div className="timeline-item" key={i.id} style={{ position: 'relative', paddingBottom: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                      <div className="timeline-date" style={{ fontWeight: 600 }}>
-                        <span style={{ marginRight: '6px' }}>{icon}</span>
-                        {fmt(i.occurred_at)} · {i.interaction_type}
+                  <div key={i.id} className="timeline-item p-3.5 bg-gray-50/70 border border-gray-200/80 rounded-xl">
+                    <div className="flex justify-between items-center text-xs">
+                      <div className="flex items-center space-x-2">
+                        <span>{icon}</span>
+                        <strong className="text-gray-900">{i.interaction_type}</strong>
+                        <span className="text-gray-400">• {fmt(i.occurred_at)}</span>
                       </div>
-
-                      {/* Action buttons: Edit & Delete */}
-                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                      <div className="flex items-center space-x-1">
                         <button
                           type="button"
                           onClick={() => setEditingInteraction(i)}
-                          title="Edit interaction"
-                          style={{
-                            background: '#f1f5f9',
-                            border: '1px solid #cbd5e1',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '0.8rem',
-                            padding: '2px 8px',
-                            color: '#334155'
-                          }}
+                          className="text-xs px-2 py-0.5 text-gray-600 hover:text-indigo-600 rounded hover:bg-gray-200 transition"
                         >
-                          ✏️ Edit
+                          Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteInteraction(i.id)}
-                          title="Delete interaction"
-                          style={{
-                            background: '#fef2f2',
-                            border: '1px solid #fecaca',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '0.8rem',
-                            padding: '2px 8px',
-                            color: '#dc2626'
-                          }}
+                          className="text-xs px-2 py-0.5 text-rose-600 hover:text-rose-800 rounded hover:bg-rose-50 transition"
                         >
                           🗑️
                         </button>
                       </div>
                     </div>
 
-                    <div className="timeline-title" style={{ fontSize: '1.05rem', marginTop: '4px', color: 'var(--ink)' }}>
-                      {i.subject || i.interaction_type}
-                    </div>
-
                     {i.details && (
-                      <div style={{ marginTop: '6px', color: 'var(--ink-secondary)', fontSize: '0.9rem', whiteSpace: 'pre-wrap' }}>
-                        {i.details}
-                      </div>
+                      <p className="text-xs text-gray-700 mt-2 leading-relaxed whitespace-pre-wrap">{i.details}</p>
                     )}
 
-                    {/* Follow-up Indicator */}
                     {hasFollowUp && (
-                      <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div className="mt-2 text-[11px] font-semibold">
                         {i.follow_up_status === 'pending' ? (
-                          <span style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', padding: '3px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
+                          <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded border border-amber-200">
                             ⏳ Follow-up: {fmt(i.follow_up_date) || 'Pending'}
                           </span>
                         ) : i.follow_up_status === 'completed' ? (
-                          <span style={{ background: '#dcfce7', color: '#166534', border: '1px solid #bbf7d0', padding: '3px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
-                            ✅ Follow-up completed{i.follow_up_date ? ` (${fmt(i.follow_up_date)})` : ''}
+                          <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded border border-emerald-200">
+                            ✅ Follow-up completed
                           </span>
-                        ) : i.follow_up_status === 'cancelled' ? (
-                          <span style={{ background: '#f1f5f9', color: '#64748b', border: '1px solid #e2e8f0', padding: '3px 8px', borderRadius: '6px', fontSize: '0.8rem' }}>
-                            ✕ Follow-up cancelled
+                        ) : (
+                          <span className="bg-blue-50 text-blue-800 px-2 py-0.5 rounded border border-blue-200">
+                            🔔 Scheduled: {fmt(i.follow_up_date)}
                           </span>
-                        ) : i.follow_up_date ? (
-                          <span style={{ background: '#eff6ff', color: '#1e40af', border: '1px solid #dbeafe', padding: '3px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
-                            🔔 Follow-up scheduled: {fmt(i.follow_up_date)}
-                          </span>
-                        ) : null}
+                        )}
                       </div>
                     )}
                   </div>
                 );
               })}
-              {!data.interactions.length && <div className="empty">No interaction history recorded yet.</div>}
+              {!data.interactions.length && (
+                <p className="text-xs text-gray-400 italic">No timeline entries recorded yet.</p>
+              )}
             </div>
 
-            <hr style={{ border: 0, borderTop: '1px solid var(--line)', margin: '22px 0' }} />
-            <h4 style={{ margin: '0 0 12px 0', fontSize: '1rem', color: 'var(--ink)' }}>+ Log New Interaction</h4>
-            <AddInteraction contactId={c.id} onInteractionAdded={loadContact} />
+            <div className="mt-5 pt-4 border-t border-gray-100">
+              <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">+ Log New Interaction</h4>
+              <AddInteraction contactId={c.id} onInteractionAdded={loadContact} />
+            </div>
           </div>
+
         </section>
 
-        {/* Aside Sidebar */}
-        <aside className="grid" style={{ gap: '20px' }}>
-          {/* Profile Details */}
-          <div className="card">
-            <h3 className="section-title">Contact Profile Details</h3>
-            <div className="meta">
-              <div>Email</div><div>{c.primary_email || '—'}</div>
-              <div>Phone</div><div>{c.mobile_phone || c.primary_phone || '—'}</div>
-              <div>Birthday</div><div>{fmt(c.birthday) || '—'}</div>
-              <div>Spouse</div><div>{c.spouse_name || '—'}</div>
-              <div>Interests</div><div>{c.interests || '—'}</div>
-              <div>Address</div>
-              <div>
-                {[c.work_address1, c.work_address2, c.work_city, c.work_state, c.work_postal_code, c.work_country]
-                  .filter(Boolean)
-                  .join(', ') || '—'}
-              </div>
-            </div>
-          </div>
+        {/* Sidebar Column */}
+        <aside className="grid gap-6">
 
-          {/* 🔗 Relationships & Network */}
+          {/* 7. 🔗 CONNECTIONS & PEOPLE AROUND CONTACT */}
           <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '1.2rem' }}>🔗</span>
-                <h3 className="section-title" style={{ margin: 0 }}>People around {c.first_name}</h3>
+            <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">🔗</span>
+                <h3 className="section-title m-0 text-sm font-bold text-gray-900">Connections</h3>
               </div>
-              <span className="subtle" style={{ fontSize: '0.8rem' }}>{data.relationships.length}</span>
+              <span className="text-xs text-gray-400">{data.relationships.length}</span>
             </div>
 
-            <div className="list">
+            <div className="space-y-2">
               {data.relationships.map(x => (
-                <div key={x.id} style={{ padding: '10px 0', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div key={x.id} className="p-2.5 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-between text-xs">
                   <div>
                     {x.related_contact_id ? (
                       <Link
                         href={`/contacts/${x.related_contact_id}`}
-                        style={{ color: '#1a73e8', fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                        title="View linked contact profile"
+                        className="font-bold text-indigo-600 hover:text-indigo-800"
                       >
                         👤 {x.related_name || x.linked_name} ↗
                       </Link>
                     ) : (
-                      <strong style={{ color: 'var(--ink)' }}>{x.related_name || x.linked_name}</strong>
+                      <strong className="text-gray-900">{x.related_name || x.linked_name}</strong>
                     )}
-                    <div className="subtle" style={{ fontSize: '0.85rem', marginTop: '2px' }}>
-                      <span style={{ background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px', fontWeight: 600, marginRight: '6px', fontSize: '0.78rem' }}>
-                        {x.relationship_type}
-                      </span>
-                      {x.notes ? ` · ${x.notes}` : ''}
-                    </div>
+                    <span className="text-gray-500 block text-[11px]">{x.relationship_type} {x.notes ? `• ${x.notes}` : ''}</span>
                   </div>
-
                   <button
                     type="button"
                     onClick={() => handleDeleteRelationship(x.id)}
-                    title="Remove relationship"
-                    style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px', fontSize: '0.9rem' }}
+                    className="text-gray-400 hover:text-rose-600 text-xs p-1"
+                    title="Remove connection"
                   >
                     ✕
                   </button>
                 </div>
               ))}
-              {!data.relationships.length && <div className="empty">No relationship links yet.</div>}
+              {!data.relationships.length && (
+                <p className="text-xs text-gray-400 italic">No relationships linked yet.</p>
+              )}
             </div>
 
-            <hr style={{ border: 0, borderTop: '1px solid var(--line)', margin: '22px 0' }} />
-            <h4 style={{ margin: '0 0 12px 0', fontSize: '1rem', color: 'var(--ink)' }}>+ Connect Another Person</h4>
-            <AddRelationship contactId={c.id} onRelationshipAdded={loadContact} />
+            <div className="mt-4 pt-3 border-t border-gray-100">
+              <AddRelationship contactId={c.id} onRelationshipAdded={loadContact} />
+            </div>
           </div>
+
+          {/* 8. 🏷️ SOURCE & CONTEXT TAGS */}
+          <div className="card">
+            <h3 className="section-title text-sm font-bold text-gray-900 mb-2">SOURCE & Context Tags</h3>
+            <div className="flex flex-wrap gap-1.5">
+              {data.sources.map(s => (
+                <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 px-2.5 py-0.5 rounded-full font-semibold" key={s.id}>
+                  {s.name}
+                </span>
+              ))}
+              {!data.sources.length && <span className="text-xs text-gray-400 italic">No tags attached.</span>}
+            </div>
+          </div>
+
+          {/* 9. 👤 CONTACT PROFILE DETAILS */}
+          <div className="card">
+            <h3 className="section-title text-sm font-bold text-gray-900 mb-3 pb-2 border-b border-gray-100">
+              Profile Details
+            </h3>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between py-1 border-b border-gray-50">
+                <span className="text-gray-500 font-medium">Primary Email:</span>
+                <span className="text-gray-900 font-semibold">{c.primary_email || '—'}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-50">
+                <span className="text-gray-500 font-medium">Mobile Phone:</span>
+                <span className="text-gray-900 font-semibold">{c.mobile_phone || c.primary_phone || '—'}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-50">
+                <span className="text-gray-500 font-medium">Work Location:</span>
+                <span className="text-gray-900 font-semibold">{[c.work_city, c.work_state, c.work_country].filter(Boolean).join(', ') || '—'}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-50">
+                <span className="text-gray-500 font-medium">Spouse / Partner:</span>
+                <span className="text-gray-900 font-semibold">{c.spouse_name || '—'}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-50">
+                <span className="text-gray-500 font-medium">Interests & Topics:</span>
+                <span className="text-gray-900 font-semibold">{c.interests || '—'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 10. 📜 EXPANDABLE FACT HISTORY & PROVENANCE ("Why does Dossier think this?") */}
+          <div className="card">
+            <div
+              className="flex justify-between items-center cursor-pointer select-none"
+              onClick={() => setIsHistoryExpanded(!isHistoryExpanded)}
+            >
+              <div className="flex items-center space-x-2">
+                <span className="text-base">📜</span>
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900 m-0">Historical Employment & Provenance</h3>
+                  <p className="text-[11px] text-gray-500 m-0">“Why does Dossier think this?” ({historyData.length} facts)</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="text-xs text-indigo-600 font-bold px-2 py-1 rounded bg-indigo-50 border border-indigo-200"
+              >
+                {isHistoryExpanded ? 'Collapse ▲' : 'Expand ▼'}
+              </button>
+            </div>
+
+            {isHistoryExpanded && (
+              <div className="mt-4 pt-3 border-t border-gray-100 space-y-3">
+                {historyData.length === 0 ? (
+                  <p className="text-xs text-gray-400 italic">No historical provenance events recorded for this contact.</p>
+                ) : (
+                  historyData.map(h => {
+                    let parsedPayload = {};
+                    try {
+                      parsedPayload = typeof h.value_payload === 'string' ? JSON.parse(h.value_payload) : (h.value_payload || {});
+                    } catch (e) {
+                      parsedPayload = { value: h.value_payload };
+                    }
+                    const factValue = parsedPayload.company_name || parsedPayload.phone || parsedPayload.email || JSON.stringify(parsedPayload);
+                    const isCurrent = Boolean(h.is_current);
+
+                    return (
+                      <div
+                        key={h.id}
+                        className={`p-3 rounded-lg border text-xs space-y-1.5 ${
+                          isCurrent ? 'bg-emerald-50/60 border-emerald-200' : 'bg-slate-50 border-slate-200'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center">
+                          <span className="font-extrabold text-[10px] uppercase tracking-wider text-gray-700">
+                            {h.fact_type}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            isCurrent ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-700'
+                          }`}>
+                            {isCurrent ? 'Current Value' : (h.confidence_status || 'Historical')}
+                          </span>
+                        </div>
+
+                        <div className="font-bold text-gray-900 text-xs">
+                          {factValue}
+                        </div>
+
+                        {h.source_raw_content && (
+                          <div className="text-[11px] text-gray-500 font-mono bg-white p-2 rounded border border-gray-200">
+                            <span className="font-semibold block text-[10px] uppercase text-gray-400">Original Memory:</span>
+                            "{h.source_raw_content}"
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+          </div>
+
         </aside>
       </div>
 

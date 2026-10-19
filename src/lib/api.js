@@ -87,6 +87,105 @@ export async function apiFetch(endpoint, options = {}) {
   return data;
 }
 
+/**
+ * Executes a streaming fetch with real-time SSE event updates
+ */
+export async function apiStreamFetch(endpoint, options = {}, onProgress = null) {
+  let url;
+  if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+    url = endpoint;
+  } else {
+    const base = API_BASE_URL.replace(/\/+$/, '');
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+
+    if (base.endsWith('/api/v1')) {
+      url = `${base}${cleanEndpoint}`;
+    } else if (cleanEndpoint.startsWith('/api/v1/')) {
+      url = `${base}${cleanEndpoint}`;
+    } else {
+      url = `${base}/api/v1${cleanEndpoint}`;
+    }
+  }
+
+  const defaultHeaders = {
+    'Content-Type': 'application/json',
+    'Accept': 'text/event-stream, application/json',
+    ...(options.headers || {})
+  };
+
+  const response = await fetch(url, {
+    ...options,
+    headers: defaultHeaders,
+    credentials: 'include'
+  });
+
+  if (
+    response.status === 401 &&
+    typeof window !== 'undefined' &&
+    window.location.pathname !== '/' &&
+    window.location.pathname !== '/login'
+  ) {
+    window.location.href = '/';
+    throw new Error('Unauthorized');
+  }
+
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('text/event-stream') || !response.body) {
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data?.error || data?.message || `Request failed with status ${response.status}`);
+    }
+    return data;
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let finalResult = null;
+  let streamError = null;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('data:')) {
+        const jsonStr = trimmed.slice(5).trim();
+        if (!jsonStr) continue;
+        try {
+          const evt = JSON.parse(jsonStr);
+          if (evt.stage === 'ERROR') {
+            streamError = new Error(evt.message || 'Analysis failed');
+          }
+          if (onProgress && typeof onProgress === 'function') {
+            onProgress(evt);
+          }
+          if (evt.data) {
+            finalResult = evt.data;
+          }
+        } catch {
+          // ignore chunk parse failure
+        }
+      }
+    }
+  }
+
+  if (streamError) {
+    throw streamError;
+  }
+
+  if (!finalResult) {
+    throw new Error('Incomplete response received from server');
+  }
+
+  return finalResult;
+}
+
 export async function apiUploadFile(file) {
   const base = API_BASE_URL.replace(/\/+$/, '');
   const url = base.endsWith('/api/v1') ? `${base}/upload` : `${base}/api/v1/upload`;
