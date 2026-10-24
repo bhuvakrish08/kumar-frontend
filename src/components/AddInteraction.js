@@ -50,8 +50,8 @@ export default function AddInteraction({ contactId, onInteractionAdded }) {
         </div>
 
         <div className="field">
-          <label>Date & Time</label>
-          <input name="occurred_at" type="datetime-local" defaultValue={new Date().toISOString().slice(0, 16)} />
+          <label>Date & Time (Optional)</label>
+          <input name="occurred_at" type="datetime-local" />
         </div>
 
         <div className="field wide">

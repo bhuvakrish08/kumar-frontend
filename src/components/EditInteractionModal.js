@@ -57,7 +57,7 @@ export default function EditInteractionModal({ interaction, isOpen, onClose, onU
         method: 'PUT',
         body: JSON.stringify({
           interaction_type: interactionType,
-          occurred_at: occurredAt || new Date().toISOString(),
+          occurred_at: occurredAt || null,
           subject,
           details,
           follow_up_date: followUpDate || null,

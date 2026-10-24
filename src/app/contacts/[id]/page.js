@@ -291,7 +291,7 @@ export default function ContactDetailPage() {
                       <div className="flex items-center space-x-2">
                         <span>{icon}</span>
                         <strong className="text-gray-900">{i.interaction_type}</strong>
-                        <span className="text-gray-400">• {fmt(i.occurred_at)}</span>
+                        <span className="text-gray-400">• {i.occurred_at ? fmt(i.occurred_at) : (i.raw_time_expression ? `~ ${i.raw_time_expression}` : 'Date not specified')}</span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <button

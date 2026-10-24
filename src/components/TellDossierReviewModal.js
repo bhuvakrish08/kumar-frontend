@@ -89,7 +89,7 @@ export default function TellDossierReviewModal({ isOpen, onClose, analysisResult
         interaction: inter ? {
           type: inter.type?.value || inter.type || 'Meeting',
           details: inter.details?.value || inter.details || initialPolished,
-          date: inter.date?.value || inter.date || new Date().toISOString().split('T')[0]
+          date: inter.date?.value || (typeof inter.date === 'string' ? inter.date : '') || ''
         } : null,
         notes: items.notes?.value || items.notes || extPerson.notes || initialPolished,
         sources: Array.isArray(items.sources) && items.sources.length > 0
@@ -196,7 +196,7 @@ export default function TellDossierReviewModal({ isOpen, onClose, analysisResult
           interaction: (fieldToggles.interaction && acceptedItems.interaction) ? {
             type: acceptedItems.interaction.type || 'Meeting',
             details: acceptedItems.interaction.details || polishedMemory,
-            date: acceptedItems.interaction.date || new Date().toISOString().split('T')[0]
+            date: acceptedItems.interaction.date || null
           } : null,
           notes: fieldToggles.notes ? (acceptedItems.notes || polishedMemory) : polishedMemory,
           sources: acceptedItems.sources || [],
